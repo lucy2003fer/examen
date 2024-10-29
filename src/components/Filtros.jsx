@@ -1,126 +1,127 @@
 import React, { useState } from 'react'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 const Filtros = () => {
-    const [pruebas, setPruebas] = useState(() => {
-        const storedPruebas = localStorage.getItem('pruebas')
-        return storedPruebas ? JSON.parse(storedPruebas) : []
-    })
+    const [valorTurbidez, setValorTurbidez] = useState('')
+    const [valorNitratos, setValorNitratos] = useState('')
+    const [valorFluoruros, setValorFluoruros] = useState('')
+    const [valorArsenico, setValorArsenico] = useState('')
+    const [valorMercurio, setValorMercurio] = useState('')
+    const [valorPlomo, setValorPlomo] = useState('')
+    
+    const pruebaInicial = JSON.parse(localStorage.getItem('Prueba')) || []
+    const [prueba, setPrueba] = useState(pruebaInicial)
 
-    const [valores, setValores] = useState({
-        turbidez: '',
-        nitratos: '',
-        fluoruros: '',
-        arsenico: '',
-        mercurio: '',
-        plomo: ''
-    })
-
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        setValores({
-            ...valores,
-            [name]: value
-        })
+    const rango = {
+        turbidez: { max: 1 },
+        nitratos: { max: 10 },
+        fluoruros: { max: 1.5 },
+        arsenico: { max: 0.01 },
+        mercurio: { max: 0.006 },
+        plomo: { max: 0.01 },
     }
 
-    const filtrarAgua = () => {
-        const turbidez = parseFloat(valores.turbidez)
-        const nitratos = parseFloat(valores.nitratos)
-        const fluoruros = parseFloat(valores.fluoruros)
-        const arsenico = parseFloat(valores.arsenico)
-        const mercurio = parseFloat(valores.mercurio)
-        const plomo = parseFloat(valores.plomo)
+    const datos = (e) => {
+        e.preventDefault()
 
-        const limites = {
-            turbidez: 1,
-            nitratos: 10,
-            fluoruros: 1.5,
-            arsenico: 0.01,
-            mercurio: 0.006,
-            plomo: 0.01
-        }
+        const proceso = [
+            { elemento: 'Turbidez', valorIngresado: valorTurbidez, valorFiltrado: Math.min(valorTurbidez, rango.turbidez.max), fueraDeRango: valorTurbidez > rango.turbidez.max },
+            { elemento: 'Nitratos', valorIngresado: valorNitratos, valorFiltrado: Math.min(valorNitratos, rango.nitratos.max), fueraDeRango: valorNitratos > rango.nitratos.max },
+            { elemento: 'Fluoruros', valorIngresado: valorFluoruros, valorFiltrado: Math.min(valorFluoruros, rango.fluoruros.max), fueraDeRango: valorFluoruros > rango.fluoruros.max },
+            { elemento: 'Arsénico', valorIngresado: valorArsenico, valorFiltrado: Math.min(valorArsenico, rango.arsenico.max), fueraDeRango: valorArsenico > rango.arsenico.max },
+            { elemento: 'Mercurio', valorIngresado: valorMercurio, valorFiltrado: Math.min(valorMercurio, rango.mercurio.max), fueraDeRango: valorMercurio > rango.mercurio.max },
+            { elemento: 'Plomo', valorIngresado: valorPlomo, valorFiltrado: Math.min(valorPlomo, rango.plomo.max), fueraDeRango: valorPlomo > rango.plomo.max },
+        ]
 
-        const nuevaPrueba = {
-            turbidez: { valorIngresado: turbidez, esPotable: turbidez <= limites.turbidez ? 'Potable' : 'No Potable' },
-            nitratos: { valorIngresado: nitratos, esPotable: nitratos <= limites.nitratos ? 'Potable' : 'No Potable' },
-            fluoruros: { valorIngresado: fluoruros, esPotable: fluoruros <= limites.fluoruros ? 'Potable' : 'No Potable' },
-            arsenico: { valorIngresado: arsenico, esPotable: arsenico <= limites.arsenico ? 'Potable' : 'No Potable' },
-            mercurio: { valorIngresado: mercurio, esPotable: mercurio <= limites.mercurio ? 'Potable' : 'No Potable' },
-            plomo: { valorIngresado: plomo, esPotable: plomo <= limites.plomo ? 'Potable' : 'No Potable' },
-            sonPotable: sonPotable ? 'Potable' : 'No Potable'
+        //localStorage
+        const nuevosResultados = [...prueba, proceso].slice(-5)
+        setPrueba(nuevosResultados)
+        localStorage.setItem('Prueba', JSON.stringify(nuevosResultados))
 
-        }
+        setValorTurbidez('')
+        setValorNitratos('')
+        setValorFluoruros('')
+        setValorArsenico('')
+        setValorMercurio('')
+        setValorPlomo('')
+    }
 
-        const nuevasPruebas = [...pruebas, nuevaPrueba]
-        setPruebas(nuevasPruebas)
-        localStorage.setItem('pruebas', JSON.stringify(nuevasPruebas))
+    return (
+        <div className="container my-5 text-white">
+            <form onSubmit={datos} className='shadow-lg p-5 bg-success rounded-5'>
+                <h1 className="text-center mb-4">Calidad del Agua</h1>
+                <div className="row mb-3">
+                    {['Turbidez', 'Nitratos', 'Fluoruros', 'Arsénico', 'Mercurio', 'Plomo'].map((elemento, index) => (
+                        <div className="col-md-6 mt-3" key={index}>
+                            <label><b>{elemento}</b>:</label>
+                            <input type="number" value={
+                                    elemento === 'Turbidez' ? valorTurbidez :
+                                    elemento === 'Nitratos' ? valorNitratos :
+                                    elemento === 'Fluoruros' ? valorFluoruros :
+                                    elemento === 'Arsénico' ? valorArsenico :
+                                    elemento === 'Mercurio' ? valorMercurio :
+                                    valorPlomo
+                                }
+                                onChange={(e) => {
+                                    const valor = parseFloat(e.target.value) || '';
+                                    elemento === 'Turbidez' ? setValorTurbidez(valor) :
+                                    elemento === 'Nitratos' ? setValorNitratos(valor) :
+                                    elemento === 'Fluoruros' ? setValorFluoruros(valor) :
+                                    elemento === 'Arsénico' ? setValorArsenico(valor) :
+                                    elemento === 'Mercurio' ? setValorMercurio(valor) :
+                                    setValorPlomo(valor);
+                                }}
+                                step="0.001"
+                                placeholder="Ingrese el valor"
+                                className="form-control"
+                            />
+                        </div>
+                    ))}
+                </div>
+                <button type="submit" className="btn btn-primary">Evaluar Prueba</button>
+            </form>
 
-
-        return (
-            <div>
-                <h2>Sistema de Filtro de Agua</h2>
-                <label>Turbidez: <input name="turbidez" value={valores.turbidez} onChange={handleChange} /></label>
-                <label>Nitratos: <input name="nitratos" value={valores.nitratos} onChange={handleChange} /></label>
-                <label>Fluoruros: <input name="fluoruros" value={valores.fluoruros} onChange={handleChange} /></label>
-                <label>Arsénico: <input name="arsenico" value={valores.arsenico} onChange={handleChange} /></label>
-                <label>Mercurio: <input name="mercurio" value={valores.mercurio} onChange={handleChange} /></label>
-                <label>Plomo: <input name="plomo" value={valores.plomo} onChange={handleChange} /></label>
-                <button onClick={filtrarAgua}>Aplicar Filtro</button>
-
-                <h3>Historial de Pruebas</h3>
-                <table className='table'>
-                    <thead>
-                        <tr>
-                            <th>Elemento</th>
-                            <th>Valor ingresado</th>
-                            <th>Valor que sale</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {pruebas.map((prueba, index) => (
-                            <React.Fragment key={index}>
+            <h2 className="mt-5">Resultados de las Pruebas</h2>
+            <table className="table mt-3 border-5">
+                <thead className='table-primary'>
+                    <tr>
+                        <th>Elemento</th>
+                        <th>Valor Ingresado</th>
+                        <th>Valor Filtrado</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {prueba.length > 0 ? (
+                        prueba.map((test, i) => (
+                            <React.Fragment key={i}>
+                                {test.map((elemento, j) => (
+                                    <tr key={j}>
+                                        <td>{elemento.elemento}</td>
+                                        <td>{elemento.valorIngresado}</td>
+                                        <td>{elemento.valorFiltrado}</td>
+                                        <td>{elemento.fueraDeRango ? 'No está en el rango ideal' : 'Está en el rango ideal'}</td>
+                                    </tr>
+                                ))}
                                 <tr>
-                                    <td>Turbidez</td>
-                                    <td>{prueba.turbidez.valorIngresado}</td>
-                                    <td>{prueba.turbidez.esPotable}</td>
-                                </tr>
-                                <tr>
-                                    <td>Nitratos</td>
-                                    <td>{prueba.nitratos.valorIngresado}</td>
-                                    <td>{prueba.nitratos.esPotable}</td>
-                                </tr>
-                                <tr>
-                                    <td>Fluoruros</td>
-                                    <td>{prueba.fluoruros.valorIngresado}</td>
-                                    <td>{prueba.fluoruros.esPotable}</td>
-                                </tr>
-                                <tr>
-                                    <td>Arsénico</td>
-                                    <td>{prueba.arsenico.valorIngresado}</td>
-                                    <td>{prueba.arsenico.esPotable}</td>
-                                </tr>
-                                <tr>
-                                    <td>Mercurio</td>
-                                    <td>{prueba.mercurio.valorIngresado}</td>
-                                    <td>{prueba.mercurio.esPotable}</td>
-                                </tr>
-                                <tr>
-                                    <td>Plomo</td>
-                                    <td>{prueba.plomo.valorIngresado}</td>
-                                    <td>{prueba.plomo.esPotable}</td>
+                                    <td colSpan="3" className="text-center font-weight-bold">
+                                        Resultado:
+                                    </td>
+                                    <td className='bg-secondary text-white fs-5'>
+                                        <b>{test.some((el) => el.fueraDeRango) ? 'No Potable' : 'Potable'}</b>
+                                    </td>
                                 </tr>
                             </React.Fragment>
-                        ))}
-                    </tbody>
-                    <tfoot>
+                        ))
+                    ) : (
                         <tr>
-                            <td colSpan={2}>El agua es</td>
-                            <td>l</td>
+                            <td colSpan="4" className="text-center">No hay pruebas registradas</td>
                         </tr>
-                    </tfoot>
-                </table>
-            </div>
-        )
-    }
+                    )}
+                </tbody>
+            </table>
+        </div>
+    )
 }
+
 export default Filtros
